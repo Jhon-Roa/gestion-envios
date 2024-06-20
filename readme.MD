@@ -8,5 +8,7 @@ a nivel nacional e internacional con sucursales en diferentes ciudades y países
 ocupará de la gestión de paquetes, el seguimiento de envíos, la información de los clientes, el
 control de sucursales, vehículos, chóferes y asistentes de distribución, así como.
 
-
-
+TENGO QUE HACER TRIGGERS DE:
+- COINCIDIR ESTADO DE SEGUIMIENTO CON ENVIO
+- CLIENTE ID Y ID_DIRECCION
+- 
