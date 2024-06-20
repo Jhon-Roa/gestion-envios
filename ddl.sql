@@ -26,15 +26,6 @@ CREATE TABLE estado_envio (
     CONSTRAINT uk_nombre_estado_envio UNIQUE (nombre)
 );
 
---tabla de estado_paquete creada para paquetes
-
-CREATE TABLE estado_paquete (
-    id INT(3) AUTO_INCREMENT,
-    nombre VARCHAR(20),
-    CONSTRAINT pk_id_estado_paquete PRIMARY KEY (id),
-    CONSTRAINT uk_nombre_estado_paquete UNIQUE (nombre)
-);
-
 --tabla tipo_servicio creada para paquetes
 
 CREATE TABLE tipo_servicio (
@@ -43,6 +34,14 @@ CREATE TABLE tipo_servicio (
     CONSTRAINT pk_id_tipo_servicio PRIMARY KEY (id),
     CONSTRAINT uk_nombre_tipo_servicio UNIQUE (nombre)
 );
+
+-- se creo el tipo documento
+
+CREATE TABLE tipo_documentos (
+    id INT(3) AUTO_INCREMENT,
+    nombre VARCHAR(50),
+    CONSTRAINT pk_id_tipo_documentos PRIMARY KEY (id)
+)
 
 --se dividio el nombre de el cliente, conductor y auxiliar en nombre y apellido
 
@@ -55,19 +54,14 @@ CREATE TABLE clientes (
     CONSTRAINT  uk_email_clientes UNIQUE (email)
 );
 
-CREATE TABLE conductores (
-    id INT(5) AUTO_INCREMENT,
-    nombre  VARCHAR(50),
-    apellido VARCHAR(50),
-    CONSTRAINT pk_id_conductores PRIMARY KEY (id)
-);
 
-CREATE TABLE auxiliares (
+-- se creo la tabla marcas y modelos, de los vehiculos para tener un mejor orden de estos
+
+CREATE TABLE marcas (
     id INT(5) AUTO_INCREMENT,
-    nombre  VARCHAR(50),
-    apellido VARCHAR(50),
-    CONSTRAINT pk_id_auxiliares PRIMARY KEY (id)
-);
+    nombre VARCHAR(30),
+    CONSTRAINT pk_id_marcas PRIMARY KEY (id)
+)
 
 
 --tablas... No principales
@@ -94,11 +88,38 @@ CREATE TABLE sucursales (
 CREATE TABLE rutas (
     id INT AUTO_INCREMENT,
     descripcion VARCHAR(200),
-    sucursal_id INT(11),
-    CONSTRAINT pk_id_rutas PRIMARY KEY (id),
-    CONSTRAINT fk_sucursal_id_rutas FOREIGN KEY sucursal_id
-        REFERENCES sucursales(id)
+    CONSTRAINT pk_id_rutas PRIMARY KEY (id)
 )
+
+CREATE TABLE sucursal_ruta (
+    id_sucursal INT(11),
+    id_ruta INT(11),
+    CONSTRAINT pk_sucursal_ruta PRIMARY KEY (id_sucursal, id_ruta),
+    CONSTRAINT fk_id_sucursal_sucursal_ruta FOREIGN key id_sucursal
+        REFERENCES sucursales(id),
+    CONSTRAINT fk_id_ruta_sucursal_ruta FOREIGN key id_ruta
+        REFERENCES rutas(id),
+)
+
+CREATE TABLE conductores (
+    documento VARCHAR(30),
+    id_tipo_documento INT(5),
+    nombre  VARCHAR(50),
+    apellido VARCHAR(50),
+    CONSTRAINT pk_documento_conductores PRIMARY KEY (documento),
+    CONSTRAINT fk_id_tipo_documento FOREIGN KEY id_tipo_documento
+        REFERENCES tipo_documentos(id)
+);
+
+CREATE TABLE auxiliares (
+    documento VARCHAR(30),
+    id_tipo_documento INT(5),
+    nombre  VARCHAR(50),
+    apellido VARCHAR(50),
+    CONSTRAINT pk_documento_auxiliares PRIMARY KEY (documento),
+    CONSTRAINT fk_id_tipo_documento FOREIGN KEY id_tipo_documento
+        REFERENCES tipo_documentos(id)
+);
 
 CREATE TABLE paquetes (
     id INT AUTO_INCREMENT,
@@ -108,12 +129,9 @@ CREATE TABLE paquetes (
     contenido TEXT,
     valor_declarado DECIMAL(10, 2),
     id_tipo_servicio INT(3),
-    id_estado_paquete INT(3),
     CONSTRAINT pk_id_paquetes PRIMARY KEY (id),
     CONSTRAINT fk_id_tipo_servicio_paquetes FOREIGN KEY id_tipo_servicio
-        REFERENCES tipo_servicio(id),
-    CONSTRAINT fk_id_estado_paquete_paquetes FOREIGN KEY id_estado_paquete
-        REFERENCES estado_paquete(id)
+        REFERENCES tipo_servicio(id)
 );
 
 CREATE TABLE telefonos_clientes (
@@ -139,27 +157,63 @@ CREATE TABLE direcciones_clientes (
 CREATE TABLE telefonos_conductores (
     id INT AUTO_INCREMENT,
     numero VARCHAR(20),
-    conductor_id INT(11),
+    conductor_documento INT(11),
     CONSTRAINT pk_id_telefonos_conductores PRIMARY KEY (id),
-    CONSTRAINT fk_conductor_id_telefonos_conductores FOREIGN KEY conductor_id
-        REFERENCES conductores(id),
+    CONSTRAINT fk_conductor_documento_telefonos_conductores FOREIGN KEY conductor_documento
+        REFERENCES conductores(documento),
     CONSTRAINT uk_numero_telefonos_clientes UNIQUE (numero)
 );
 
 CREATE TABLE telefonos_auxiliares (
     id INT AUTO_INCREMENT,
     numero VARCHAR(20),
-    auxiliar_id INT(11),
+    auxiliar_documento INT(11),
     CONSTRAINT pk_id_telefonos_auxiliares PRIMARY KEY (id),
-    CONSTRAINT fk_auxiliar_id_telefonos_auxiliares FOREIGN KEY auxiliar_id
-        REFERENCES auxiliares(id),
+    CONSTRAINT fk_auxiliar_documento_telefonos_auxiliares FOREIGN KEY auxiliar_documento
+        REFERENCES auxiliares(documento),
     CONSTRAINT uk_numero_telefonos_clientes UNIQUE (numero)
 );
+
+-- se añadio el estado en envios, no en seguimiento,
 
 CREATE TABLE envios (
     id INT AUTO_INCREMENT,
     cliente_id INT(11),
     paquete_id INT(11),
     fecha_envio TIMESTAMP,
-    destino VARCHAR(200)
+    destino VARCHAR(200),
+    ruta_id INT(11),
+    id_sucursal_salida INT(11),
+    id_sucursal_destino INT(11),
+    CONSTRAINT pk_id_envios PRIMARY KEY (id),
+    CONSTRAINT fk_cliente_id_envios FOREIGN KEY cliente_id
+        REFERENCES clientes(id),
+    CONSTRAINT fk_paquete_id_envios FOREIGN KEY paquete_id
+        REFERENCES paquetes(id),
+
+)
+
+
+
+CREATE TABLE modelos (
+    id INT(5) AUTO_INCREMENT,
+    nombre VARCHAR(30),
+    id_marca INT(5),
+    CONSTRAINT pk_id_modelos PRIMARY KEY (id),
+    CONSTRAINT fk_id_marca_modelos FOREIGN KEY id_marca
+        REFERENCES marcas(id)
+)
+
+-- se elimino id de vehiculos y se hizo la primary key la placa del vehiculo
+
+CREATE TABLE vehiculos (
+    placa VARCHAR(50),
+    capacidad_carga DECIMAL(10,2)
+    modelo_id INT(5),
+    sucursal_id INT(11),
+    CONSTRAINT pk_placa_vehiculos PRIMARY KEY (placa),
+    CONSTRAINT fk_modelo_id_vehiculos FOREIGN KEY modelo_id
+        REFERENCES modelos(id),
+    CONSTRAINT fk_sucursal_id_vehiculos FOREIGN KEY sucursal_id
+        REFERENCES sucursales(id),
 )
