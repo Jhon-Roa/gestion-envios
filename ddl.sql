@@ -313,5 +313,3 @@ BEGIN
 END;
 
 //
-
-DELIMITER ;

@@ -66,7 +66,7 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
 
   ```sql
   INSERT INTO envios (cliente_id, id_direccion_destinatario, paquete_id, fecha_envio, id_ruta, id_sucursal_salida, id_sucursal_destino, id_estado_envio) 
-  VALUES (4, 7, 11, '2024-02-20 09:00:00', 5, 1, 2, 1);
+  VALUES (11, 7, 11, '2024-02-20 09:00:00', 5, 1, 2, 1);
   ```
 
 - ### Caso de uso 8: Registrar un nuevo vehiculo
@@ -83,15 +83,14 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   VALUES ('6323228', 1, 'Carlos', 'Mendez');
   ```
 
-- ### Caso de uso 10: Registrar un nuevo numero para unconductor
+- ### Caso de uso 10: Registrar un nuevo numero para un conductor
 
   ```sql
   INSERT INTO telefonos_conductores (numero, conductor_documento, id_tipo_telefono) 
   VALUES ('313-3232233', '6323228', 1);
   ```
 
-- ### Caso de Uso 11: Asignar un Conductor a una Ruta y un
-Vehículo
+- ### Caso de Uso 11: Asignar un Conductor a una Ruta y un Vehículo
 
   ```sql
   INSERT INTO conductores_rutas (documento_conductor, id_ruta, placa_vehiculo) 
@@ -112,16 +111,7 @@ Vehículo
   VALUES (6, '110234222');
   ```
 
-- ### Caso de Uso 14: Registrar un Evento de Seguimiento para un
-Paquete
-
-  ```sql
-  INSERT INTO seguimiento (id_paquete, ubicacion, fecha_hora, id_estado) 
-  VALUES (11, 'Nueva York', '2024-02-10 20:00:00', 2);
-  ```
-
-- ### Caso de Uso 14: Registrar un Evento de Seguimiento para un
-Paquete
+- ### Caso de Uso 14: Registrar un Evento de Seguimiento para un Paquete
 
   ```sql
   INSERT INTO seguimiento (id_paquete, ubicacion, fecha_hora, id_estado) 
@@ -134,7 +124,7 @@ Paquete
   SELECT c.nombre AS nombre_cliente, e.id AS id_envio
   FROM envios AS e
   JOIN clientes AS c ON c.id = e.cliente_id
-  WHERE c.id = 11
+  WHERE c.id = 11;
   ```
 
 - ### Caso de Uso 16: Actualizar el estado de un paquete 
@@ -164,7 +154,36 @@ Paquete
   WHERE p.numero_seguimiento = 'PKG1323233'; 
   ```
 
-- hacer trigger de registrar paquete instant row seguimiento
+## Casos multitabla
 
+- ### Caso de Uso 1: Obtener Información Completa de Envíos
 
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+      p.contenido AS contenido_paquete,
+      r.descripcion AS ruta,
+      CONCAT(co.nombre, ' ', co.apellido) AS conductor,
+      ss.nombre AS sucursal_salida,
+      sd.nombre AS sucursal_destino
+  FROM envios AS e
+  JOIN clientes AS c ON c.id = e.cliente_id
+  JOIN paquetes AS p ON p.id = e.paquete_id
+  JOIN rutas AS r ON r.id = e.id_ruta
+  JOIN conductores_rutas AS coru ON r.id = coru.id_ruta
+  JOIN conductores AS co ON co.documento = coru.documento_conductor
+  JOIN sucursales AS ss ON ss.id = e.id_sucursal_salida 
+  JOIN sucursales AS sd ON sd.id = e.id_sucursal_destino
+  ORDER BY e.id;
+  ```
 
+- ### Caso de Uso 2: Obtener Historial de Envíos de un Cliente
+
+  ```sql
+  SELECT 
+  FROM clientes AS c
+  JOIN envios AS e ON c.id = e.cliente_id
+  JOIN paquetes AS o ON p.id = e.paquete_id
+  JOIN seguimiento AS s ON p.id = s.id_paquete
+  ```
+
+  
