@@ -179,11 +179,94 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
 - ### Caso de Uso 2: Obtener Historial de Envíos de un Cliente
 
   ```sql
-  SELECT 
-  FROM clientes AS c
-  JOIN envios AS e ON c.id = e.cliente_id
-  JOIN paquetes AS o ON p.id = e.paquete_id
-  JOIN seguimiento AS s ON p.id = s.id_paquete
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+      p.contenido AS contenido_paquete,
+      r.descripcion AS ruta,
+      CONCAT(co.nombre, ' ', co.apellido) AS conductor,
+      ss.nombre AS sucursal_salida,
+      sd.nombre AS sucursal_destino
+  FROM envios AS e
+  JOIN clientes AS c ON c.id = e.cliente_id
+  JOIN paquetes AS p ON p.id = e.paquete_id
+  JOIN rutas AS r ON r.id = e.id_ruta
+  JOIN conductores_rutas AS coru ON r.id = coru.id_ruta
+  JOIN conductores AS co ON co.documento = coru.documento_conductor
+  JOIN sucursales AS ss ON ss.id = e.id_sucursal_salida 
+  JOIN sucursales AS sd ON sd.id = e.id_sucursal_destino
+  WHERE c.id = 4;
+  ```
+  
+
+- ### Caso de Uso 3: Listar Conductores y sus Rutas Asignadas
+
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS conductor,
+  	r.descripcion AS ruta,
+  	CONCAT(v.placa, '', m.nombre) AS vehiculo,
+  	s.nombre AS sucursal,
+  	s.direccion AS direccion_sucursal
+  FROM conductores_rutas AS cr
+  JOIN conductores AS c ON c.documento = cr.documento_conductor
+  JOIN rutas AS r ON r.id = cr.id_ruta
+  JOIN vehiculos AS v ON v.placa = cr.placa_vehiculo
+  JOIN modelos AS m ON m.id = v.modelo_id
+  JOIN sucursales AS s ON s.id = cr.id_sucursal;
   ```
 
-  
+
+- ### Caso de Uso 4: Obtener Detalles de Rutas y Auxiliares
+  Asignados
+
+  ```sql
+  SELECT r.descripcion AS ruta,
+  	CONCAT(a.nombre, '', a.apellido) AS auxiliar,
+  	a.documento AS documento,
+  	ta.numero AS numero_telefono,
+  	tt.nombre AS tipo_telefono
+  FROM ruta_auxiliar AS ra
+  JOIN rutas AS r ON r.id = ra.id_ruta
+  JOIN auxiliares AS a ON a.documento = ra.documento_auxiliar
+  JOIN telefonos_auxiliares AS ta ON a.documento = ta.auxiliar_documento
+  JOIN tipo_telefono AS tt ON tt.id = ta.id_tipo_telefono
+  ORDER BY r.id;
+  ```
+
+
+- ### Caso de Uso 5: Generar Reporte de Paquetes por Sucursal y
+  Estado
+
+  ```sql
+  SELECT p.contenido AS paquete,
+      s.nombre AS sucursal,
+      s.direccion AS direccion_sucursal,
+      ee.nombre AS estado_envio
+  FROM paquetes AS p
+  JOIN envios AS e ON p.id = e.paquete_id
+  JOIN sucursales AS s ON s.id = e.id_sucursal_salida
+  JOIN estado_envio AS ee ON ee.id = e.id_estado_envio
+  WHERE s.id = 10 AND e.id_estado_envio = 2;
+  ```
+
+- ### Caso de Uso 6: Obtener Información Completa de un Paquete
+  y su Historial de Seguimiento
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	ts.nombre AS servicion,
+  	s.ubicacion AS historial_ubicacion,
+  	s.fecha_hora AS historial_fecha,
+  	ee.nombre AS historia_estado
+  FROM paquetes AS p
+  JOIN seguimiento AS s ON p.id = s.id_paquete
+  JOIN tipo_servicio AS ts ON ts.id = p.id_tipo_servicio
+  JOIN estado_envio AS ee ON ee.id = s.id_estado
+  WHERE p.id = 10
+  ORDER BY s.fecha_hora DESC;
+  ```
+
+- 

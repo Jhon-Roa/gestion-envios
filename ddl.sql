@@ -292,13 +292,16 @@ CREATE TABLE conductores_rutas (
     documento_conductor VARCHAR(30),
     id_ruta INT(11),
     placa_vehiculo VARCHAR(50),
+    id_sucursal INT(11),
     CONSTRAINT pk_conductores_rutas PRIMARY KEY (documento_conductor, id_ruta),
     CONSTRAINT fk_documento_conductor FOREIGN KEY (documento_conductor)
         REFERENCES conductores(documento),
     CONSTRAINT fk_id_ruta FOREIGN KEY (id_ruta)
         REFERENCES rutas(id),
     CONSTRAINT fk_placa_vehiculo FOREIGN KEY (placa_vehiculo)
-        REFERENCES vehiculos(placa) 
+        REFERENCES vehiculos(placa) ,
+    CONSTRAINT fk_id_sucursal_conductores_rutas FOREIGN KEY (id_sucursal)
+        REFERENCES sucursales(id)
 );
 
 DELIMITER //
