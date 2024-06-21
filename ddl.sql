@@ -19,6 +19,20 @@ CREATE TABLE paises (
     CONSTRAINT uk_nombre_paises UNIQUE (nombre)
 );
 
+
+CREATE TABLE direcciones (
+    id INT AUTO_INCREMENT,
+    direccion VARCHAR(200),
+    CONSTRAINT pk_id_direcciones PRIMARY KEY (id)
+);
+
+CREATE TABLE tipo_telefono (
+    id INT(3) AUTO_INCREMENT,
+    nombre VARCHAR(50),
+    CONSTRAINT pk_id_tipo_telefono PRIMARY KEY (id),
+    CONSTRAINT uk_nombre_tipo_telefono UNIQUE (nombre)
+);
+
 -- tabla de estado_envio creada para envios
 
 CREATE TABLE estado_envio (
@@ -147,25 +161,23 @@ CREATE TABLE telefonos_clientes (
     id INT AUTO_INCREMENT,
     numero VARCHAR(20),
     cliente_id INT(11),
+    id_tipo_telefono INT(3),
     CONSTRAINT pk_id_telefonos_clientes PRIMARY KEY (id),
     CONSTRAINT fk_cliente_id_telefonos_clientes FOREIGN KEY (cliente_id)
         REFERENCES clientes(id),
+    CONSTRAINT fk_id_tipo_telefono_telefonos_clientes FOREIGN KEY (id_tipo_telefono)
+        REFERENCES tipo_telefono(id),
     CONSTRAINT uk_numero_telefonos_clientes UNIQUE (numero)
 );
 
-CREATE TABLE direcciones (
-    id INT AUTO_INCREMENT,
-    direccion VARCHAR(200),
-    CONSTRAINT pk_id_direcciones PRIMARY KEY (id)
-);
-
 CREATE TABLE direccion_destinatario (
+    id INT AUTO_INCREMENT,
     id_direccion INT(11),
     id_destinatario INT(11),
-    CONSTRAINT pk_direccion_clientes PRIMARY KEY (id_direccion, id_destinatario),
-    CONSTRAINT fk_id_direccion_direccion_destinatario FOREIGN KEY (id_direccion)
+    CONSTRAINT pk_id_direccion_destinatario PRIMARY KEY (id),
+    CONSTRAINT fk_id_direccion FOREIGN KEY (id_direccion) 
         REFERENCES direcciones(id),
-    CONSTRAINT fk_id_destinatario_direccion_destinatarios FOREIGN KEY (id_destinatario)
+    CONSTRAINT fk_id_destinatario FOREIGN KEY (id_destinatario) 
         REFERENCES destinatarios(id)
 );
 
@@ -173,9 +185,12 @@ CREATE TABLE telefonos_conductores (
     id INT AUTO_INCREMENT,
     numero VARCHAR(20),
     conductor_documento VARCHAR(30),
+    id_tipo_telefono INT(3),
     CONSTRAINT pk_id_telefonos_conductores PRIMARY KEY (id),
     CONSTRAINT fk_conductor_documento_telefonos_conductores FOREIGN KEY (conductor_documento)
         REFERENCES conductores(documento),
+    CONSTRAINT fk_id_tipo_telefono_telefonos_conductores FOREIGN KEY (id_tipo_telefono)
+        REFERENCES tipo_telefono(id),
     CONSTRAINT uk_numero_telefonos_clientes UNIQUE (numero)
 );
 
@@ -183,9 +198,12 @@ CREATE TABLE telefonos_auxiliares (
     id INT AUTO_INCREMENT,
     numero VARCHAR(20),
     auxiliar_documento VARCHAR(30),
+    id_tipo_telefono INT(3),
     CONSTRAINT pk_id_telefonos_auxiliares PRIMARY KEY (id),
     CONSTRAINT fk_auxiliar_documento_telefonos_auxiliares FOREIGN KEY (auxiliar_documento)
         REFERENCES auxiliares(documento),
+    CONSTRAINT fk_id_tipo_telefono_telefonos_auxiliares FOREIGN KEY (id_tipo_telefono)
+        REFERENCES tipo_telefono(id),
     CONSTRAINT uk_numero_telefonos_clientes UNIQUE (numero)
 );
 
@@ -199,40 +217,38 @@ CREATE TABLE paquetes (
     id_tipo_servicio INT(3),
     CONSTRAINT pk_id_paquetes PRIMARY KEY (id),
     CONSTRAINT fk_id_tipo_servicio_paquetes FOREIGN KEY (id_tipo_servicio)
-        REFERENCES tipo_servicio(id)
+        REFERENCES tipo_servicio(id),
+    CONSTRAINT uk_numero_seguimiento_paquetes UNIQUE (numero_seguimiento)
 );
 
 --  se añadio el estado en envios, no en seguimiento
 
 CREATE TABLE envios (
-    id INT AUTO_INCREMENT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT(11),
-    destinatario_id INT(11),
+    id_direccion_destinatario INT(11),
     paquete_id INT(11),
     fecha_envio TIMESTAMP,
-    id_direccion INT(11),
-    ruta_id INT(11),
+    id_ruta INT(11),
     id_sucursal_salida INT(11),
     id_sucursal_destino INT(11),
     id_estado_envio INT(3),
-    CONSTRAINT pk_id_envios PRIMARY KEY (id),
-    CONSTRAINT fk_cliente_id_envios FOREIGN KEY (cliente_id)
+    CONSTRAINT fk_cliente_id_envios FOREIGN KEY (cliente_id) 
         REFERENCES clientes(id),
-    CONSTRAINT fk_destinatario_id FOREIGN KEY (destinatario_id)
-        REFERENCES destinatarios(id),
-    CONSTRAINT fk_paquete_id_envios FOREIGN KEY (paquete_id)
+    CONSTRAINT fk_id_direccion_destinatario_envios FOREIGN KEY (id_direccion_destinatario) 
+        REFERENCES direccion_destinatario(id),
+    CONSTRAINT fk_paquete_id_envios FOREIGN KEY (paquete_id) 
         REFERENCES paquetes(id),
-    CONSTRAINT fk_id_direccion_envios FOREIGN KEY (id_direccion)
-        REFERENCES direcciones(id),
-    CONSTRAINT fk_ruta_id_envios FOREIGN KEY (ruta_id)
+    CONSTRAINT fk_id_ruta_envios FOREIGN KEY (id_ruta) 
         REFERENCES rutas(id),
-    CONSTRAINT fk_id_sucursal_salida_envios FOREIGN KEY (id_sucursal_salida)
+    CONSTRAINT fk_id_sucursal_salida_envios FOREIGN KEY (id_sucursal_salida) 
         REFERENCES sucursales(id),
-    CONSTRAINT fk_id_sucursal_destino_envios FOREIGN KEY (id_sucursal_destino)
+    CONSTRAINT fk_id_sucursal_destino_envios FOREIGN KEY (id_sucursal_destino) 
         REFERENCES sucursales(id),
-    CONSTRAINT fk_id_estado_envio_envios FOREIGN KEY (id_estado_envio)
+    CONSTRAINT fk_id_estado_envio_envios FOREIGN KEY (id_estado_envio) 
         REFERENCES estado_envio(id)
 );
+
 
 CREATE TABLE seguimiento (
     id INT AUTO_INCREMENT,
@@ -241,7 +257,9 @@ CREATE TABLE seguimiento (
     fecha_hora TIMESTAMP,
     id_estado INT(3),
     CONSTRAINT pk_id_seguimiento PRIMARY KEY (id),
-    CONSTRAINT fk_id_paquete_seguimiento FOREIGN KEY (id_estado)
+    CONSTRAINT fk_id_paquete_seguimiento FOREIGN KEY (id_paquete)
+        REFERENCES  paquetes(id),
+    CONSTRAINT fk_id_estado_seguimiento FOREIGN KEY (id_estado)
         REFERENCES  estado_envio(id)
 );
 
@@ -268,6 +286,8 @@ CREATE TABLE vehiculos (
         REFERENCES sucursales(id)
 );
 
+-- no se añadio id_sucursal, por que con una consulta se puede acceder facilmente a esta    
+
 CREATE TABLE conductores_rutas (
     documento_conductor VARCHAR(30),
     id_ruta INT(11),
@@ -280,3 +300,18 @@ CREATE TABLE conductores_rutas (
     CONSTRAINT fk_placa_vehiculo FOREIGN KEY (placa_vehiculo)
         REFERENCES vehiculos(placa) 
 );
+
+DELIMITER //
+
+CREATE TRIGGER actualizar_estado_envio
+AFTER INSERT ON seguimiento
+FOR EACH ROW
+BEGIN
+    UPDATE envios
+    SET id_estado_envio = NEW.id_estado
+    WHERE paquete_id = NEW.id_paquete;
+END;
+
+//
+
+DELIMITER ;
