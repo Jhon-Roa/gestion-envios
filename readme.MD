@@ -1,16 +1,20 @@
-# Base de datos sobre gestion de envios
+# Base de datos sobre gestión de envíos
 
-Como una firma de consultoría que se especializa en el desarrollo de bases de datos, ha obtenido
-una licitación para el desarrollo de un modelo de datos y un sistema de gestión de distribución de
-paquetes para un proveedor de logística cuya operación es a nivel nacional e internacional con
-sucursales y operaciones similares a las de Amazon. Ofrece servicios de distribución de paquetes
-a nivel nacional e internacional con sucursales en diferentes ciudades y países. El sistema se
-ocupará de la gestión de paquetes, el seguimiento de envíos, la información de los clientes, el
-control de sucursales, vehículos, chóferes y asistentes de distribución, así como.
+> [!NOTE]
+>
+> Como una firma de consultoría que se especializa en el desarrollo de bases de datos, ha obtenido
+> una licitación para el desarrollo de un modelo de datos y un sistema de gestión de distribución de
+> paquetes para un proveedor de logística cuya operación es a nivel nacional e internacional con
+> sucursales y operaciones similares a las de Amazon. Ofrece servicios de distribución de paquetes
+> a nivel nacional e internacional con sucursales en diferentes ciudades y países. El sistema se
+> ocupará de la gestión de paquetes, el seguimiento de envíos, la información de los clientes, el
+> control de sucursales, vehículos, chóferes y asistentes de distribución, así como.
+
+
 
 ## Diagrama de la base de datos:
 
-![](/home/jhonroa/Descargas/gestion_envios.png)
+![](./images/gestion_envios.png)
 
 ## Solución de casos de uso:
 
@@ -196,7 +200,6 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   WHERE c.id = 4;
   ```
   
-
 - ### Caso de Uso 3: Listar Conductores y sus Rutas Asignadas
 
   ```sql
@@ -214,8 +217,7 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   ```
 
 
-- ### Caso de Uso 4: Obtener Detalles de Rutas y Auxiliares
-  Asignados
+- ### Caso de Uso 4: Obtener Detalles de Rutas y Auxiliares Asignados
 
   ```sql
   SELECT r.descripcion AS ruta,
@@ -232,8 +234,13 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   ```
 
 
-- ### Caso de Uso 5: Generar Reporte de Paquetes por Sucursal y
-  Estado
+- ### Caso de Uso 5: Generar Reporte de Paquetes por Sucursal y Estado
+
+  > [!NOTE]
+  >
+  > La interpretación fue la siguiente, se toma la sucursal y es estado envió y se listan los paquetes que cumplan con los requisitos
+
+  
 
   ```sql
   SELECT p.contenido AS paquete,
@@ -247,8 +254,7 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   WHERE s.id = 10 AND e.id_estado_envio = 2;
   ```
 
-- ### Caso de Uso 6: Obtener Información Completa de un Paquete
-  y su Historial de Seguimiento
+- ### Caso de Uso 6: Obtener Información Completa de un Paquete y su Historial de Seguimiento
 
   ```sql
   SELECT p.id AS id,
@@ -269,4 +275,162 @@ control de sucursales, vehículos, chóferes y asistentes de distribución, así
   ORDER BY s.fecha_hora DESC;
   ```
 
-- 
+## Casos de uso BETWEEN, IN, NOT IN
+
+- ### Caso de uso 1: obtener paquetes enviados dentro de un rango de fechas
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	e.fecha_envio AS fecha_de_envio
+  FROM paquetes AS p
+  JOIN envios AS e ON p.id = e.paquete_id
+  WHERE e.fecha_envio BETWEEN '2024-06-20 09:00:00' AND '2024-06-25 09:00:00'
+  ORDER BY e.fecha_envio DESC;
+  ```
+
+- ### Caso de Uso 2: Obtener Paquetes con Ciertos Estados
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	ee.nombre AS estado
+  FROM paquetes AS p
+  JOIN envios AS e ON p.id = e.paquete_id
+  JOIN estado_envio AS ee ON ee.id = e.id_estado_envio
+  WHERE e.id_estado_envio IN (2, 3);
+  ```
+
+- ### Caso de Uso 3: Obtener Paquetes Excluyendo Ciertos Estados
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	ee.nombre AS estado
+  FROM paquetes AS p
+  JOIN envios AS e ON p.id = e.paquete_id
+  JOIN estado_envio AS ee ON ee.id = e.id_estado_envio
+  WHERE e.id_estado_envio NOT IN (2, 3);
+  ```
+
+- ### Caso de Uso 4: Obtener Clientes con Envíos Realizados Dentro de un Rango de Fechas
+
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+  	c.email AS email,
+  	e.fecha_envio AS fecha_de_envio
+  FROM clientes AS c
+  JOIN envios AS e ON c.id = e.cliente_id
+  WHERE e.fecha_envio BETWEEN '2024-06-20 09:00:00' AND '2024-06-25 09:00:00'
+  ORDER BY e.fecha_envio DESC;
+  ```
+
+- ### Caso de Uso 5: Obtener Conductores Disponibles que No Están Asignados a Ciertas Rutas
+
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS conductor,
+  	tc.numero AS telefono,
+  	r.descripcion AS ruta
+  FROM conductores AS c
+  JOIN conductores_rutas AS cr ON c.documento = cr.documento_conductor
+  JOIN telefonos_conductores AS tc ON c.documento = conductor_documento
+  JOIN rutas AS r ON r.id = cr.id_ruta
+  WHERE r.id NOT IN (1, 3, 5,7);
+  ```
+
+- ### Caso de Uso 6: Obtener Información de Paquetes con Valor Declarado Dentro de un Rango Específico
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	ee.nombre AS estado
+  FROM paquetes AS p
+  JOIN envios AS e ON p.id = e.paquete_id
+  JOIN estado_envio AS ee ON ee.id = e.id_estado_envio
+  WHERE p.valor_declarado BETWEEN 50 AND 100
+  ORDER BY p.valor_declarado DESC;
+  ```
+
+- ### Caso de Uso 7: Obtener Auxiliares Asignados a Rutas Específicas
+
+  ```sql
+  SELECT a.documento AS id_auxiliar,
+      CONCAT (a.nombre, ' ', a.apellido) AS auxiliar,
+      r.descripcion AS ruta,
+      r.id AS id_ruta
+  FROM auxiliares AS a
+  JOIN ruta_auxiliar AS ra ON a.documento = ra.documento_auxiliar
+  JOIN rutas AS r ON r.id = ra.id_ruta
+  WHERE r.id IN (1,2,3,4)
+  ORDER BY r.id;
+  ```
+
+- ### Caso de Uso 8: Obtener Envíos a Destinos Excluyendo Ciertas Ciudades
+
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+      p.contenido AS contenido_paquete,
+      ss.nombre AS sucursal_salida,
+      sd.nombre AS sucursal_destino,
+      ci.nombre AS ciudad_sucursal,
+      ci.id AS id_ciudad
+  FROM envios AS e
+  JOIN clientes AS c ON c.id = e.cliente_id
+  JOIN paquetes AS p ON p.id = e.paquete_id
+  JOIN sucursales AS ss ON ss.id = e.id_sucursal_salida 
+  JOIN sucursales AS sd ON sd.id = e.id_sucursal_destino
+  JOIN ciudades AS ci ON ci.id = sd.ciudad_id
+  WHERE ci.id NOT IN (2, 3, 6, 8, 11, 15)
+  ORDER BY ci.id;
+  ```
+
+- ### Caso de Uso 9: Obtener Seguimientos de Paquetes en un Rango de Fechas
+
+  ```sql
+  SELECT p.id AS id,
+  	p.numero_seguimiento AS numero_de_seguimiento,
+  	p.peso AS peso_paquete,
+  	p.dimensiones AS dimensiones,
+  	p.contenido AS contenido,
+  	p.valor_declarado AS valor_paquete,
+  	ee.nombre AS estado_paquete,
+  	s.ubicacion AS ubicacion_paquete,
+  	s.fecha_hora AS fecha_seguimiento
+  FROM paquetes AS p
+  JOIN seguimiento AS s ON p.id = s.id_paquete 
+  JOIN envios AS e ON p.id = e.paquete_id
+  JOIN estado_envio AS ee ON ee.id = e.id_estado_envio
+  WHERE s.fecha_hora BETWEEN '2024-06-20 09:00:00' AND '2024-06-25 09:00:00'
+  ORDER BY s.fecha_hora DESC;
+  ```
+
+- ### Caso de Uso 10: Obtener Clientes que Tienen Ciertos Tipos de Paquetes
+
+  ```sql
+  SELECT CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+  c.email,
+  p.contenido AS contenido_paquete,
+  ts.nombre AS tipo_servicio
+  FROM clientes AS c
+  JOIN envios AS e on c.id = e.cliente_id
+  JOIN paquetes AS p ON p.id = e.paquete_id
+  JOIN tipo_servicio AS ts ON ts.id = p.id_tipo_servicio
+  WHERE p.id_tipo_servicio IN (1, 2);
+  ```
+
